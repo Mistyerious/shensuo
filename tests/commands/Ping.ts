@@ -8,7 +8,7 @@ export default class extends Command {
 		});
 	}
 
-	public exec(message: Message, args: unknown) {
+	public exec(message: Message, args: unknown): void {
 		const embed = new MessageEmbed()
 			.setColor('RED')
 			.setDescription('**`Pong`**!')
@@ -20,6 +20,6 @@ export default class extends Command {
 				},
 			]);
 
-		return message.reply(embed);
+		message.reply(embed);
 	}
 }

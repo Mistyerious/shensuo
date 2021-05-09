@@ -1,6 +1,7 @@
 import { ClientOptions, Intents } from 'discord.js';
 import { resolve } from 'path';
-import { ShensuoClient, Logger, CommandHandler, IShensuoClientOptions, EVENTS, Command } from '../src';
+import { ShensuoClient, Logger, CommandHandler, IShensuoClientOptions } from '../src';
+import { token, prefix } from './config.json';
 
 class TestingBot extends ShensuoClient {
 	public constructor(private readonly _options: IShensuoClientOptions & ClientOptions) {
@@ -8,7 +9,7 @@ class TestingBot extends ShensuoClient {
 	}
 
 	public readonly commandHandler: CommandHandler = new CommandHandler(this, {
-		prefix: '>>',
+		prefix,
 		directory: resolve(__dirname, 'commands'),
 		logging: true,
 	});
@@ -27,6 +28,6 @@ class TestingBot extends ShensuoClient {
 }
 
 new TestingBot({ 
-	token: 'NzE3ODQ3MTUxMzk2MjU3ODEz.XtgRQQ.7FhUlVDVO8X2A_8CL_FY-MZeSy4',
+	token,
 	intents: Intents.ALL
 }).start();

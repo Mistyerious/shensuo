@@ -1,4 +1,4 @@
 build
-config.ts
 node_modules
 coverage
+config.json

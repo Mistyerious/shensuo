@@ -19,7 +19,10 @@ export class Logger {
 
 	protected static write(colour: number[], level: LogTypes, ...message: unknown[]): Logger {
 		process.stdout.write(
-			`${Logger._rgb(Logger._colours[level], Logger._symbols[level])} ${Logger._rgb(Logger._colours.foreground, new Date().toLocaleString())} ${Logger._rgb(colour, level.toUpperCase())} (shensuo) ${Logger._rgb(colour, message)}${EOL}`,
+			`${Logger._rgb(Logger._colours[level], Logger._symbols[level])} ${Logger._rgb(Logger._colours.foreground, new Date().toLocaleString())} ${Logger._rgb(colour, level.toUpperCase())} (shensuo) ${Logger._rgb(
+				colour,
+				message,
+			)}${EOL}`,
 		);
 		return Logger;
 	}

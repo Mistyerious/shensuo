@@ -5,8 +5,20 @@ import { ICommandOptions } from '..';
 import { BaseModule } from '../extendable/BaseModule';
 
 export abstract class Command extends BaseModule {
-	public constructor(identifier: string, public readonly options: ICommandOptions) {
-		super(identifier, { category: options.category ?? 'default' });
+	public readonly options: ICommandOptions;
+
+	public constructor(identifier: string, { aliases = [], clientPermissions = [], description = {}, ownerOnly = false, userPermissions = [], category = 'default', channel = 'guild' }: ICommandOptions) {
+		super(identifier, { category });
+
+		this.options = {
+			aliases,
+			clientPermissions,
+			description,
+			ownerOnly,
+			userPermissions,
+			category,
+			channel,
+		};
 	}
 
 	public abstract exec(message: Message, args: unknown): any;

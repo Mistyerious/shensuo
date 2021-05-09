@@ -1,21 +1,17 @@
-import { Collection, Message, PartialMessage } from 'discord.js';
+import { Collection, Message, PartialMessage, PermissionString } from 'discord.js';
 import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger } from '..';
+import { EVENTS_REASONS } from '../Constants';
 import { BaseHandler } from '../extendable/BaseHandler';
+import { Util } from '../Util';
 
 export class CommandHandler extends BaseHandler {
 	public readonly aliases: Collection<string, string> = new Collection();
 	public readonly modules: Collection<string, Command> = new Collection();
-
-	protected _prefix: string | string[];
-	protected readonly _handleEdits: boolean;
-	protected readonly _blockBots: boolean;
-	protected readonly _blockClient: boolean;
-	protected readonly _allowMention: boolean;
-	protected readonly _fetchMembers: boolean;
+	protected readonly _options: ICommandHandlerOptions;
 
 	public constructor(
 		public readonly client: ShensuoClient,
-		{ extensions = ['.js', '.ts'], handleEdits = true, blockClient = true, blockBots = true, prefix = '!', allowMention = true, logging = true, directory, fetchMembers = false }: ICommandHandlerOptions,
+		{ extensions = ['.js', '.ts'], handleEdits = true, blockClient = true, blockBots = true, prefix = '!', allowMention = true, logging = true, directory, fetchMembers = false, ownersIgnorePermissions = true }: ICommandHandlerOptions,
 	) {
 		super(client, {
 			extensions,
@@ -23,29 +19,39 @@ export class CommandHandler extends BaseHandler {
 			logging,
 		});
 
-		this._handleEdits = handleEdits;
-		this._blockBots = blockBots;
-		this._blockClient = blockClient;
-		this._prefix = prefix;
-		this._allowMention = allowMention;
-		this._fetchMembers = fetchMembers;
+		this._options = {
+			extensions,
+			handleEdits,
+			blockClient,
+			blockBots,
+			prefix,
+			allowMention,
+			logging,
+			directory,
+			fetchMembers,
+			ownersIgnorePermissions,
+		};
 
-		this.client.once('ready', (): void => {
-			this.client.on('message', async (message: Message) => {
-				if ((this._blockClient && message.author.id === this.client.user?.id) || (this._blockBots && message.author.bot)) return;
-				if (message.partial) await message.fetch();
+			this.client.on(
+				'message',
+				async (message: Message): Promise<void> => {
+					if ((this._options.blockClient && message.author.id === this.client.user?.id) || (this._options.blockBots && message.author.bot)) return;
+					if (message.partial) await message.fetch();
 
-				await this._handle(message as Message);
-			});
+					await this._handle(message as Message);
+				},
+			);
 
-			if (this._handleEdits)
-				this.client.on('messageUpdate', async (oldMessage: Message | PartialMessage, message: Message | PartialMessage) => {
-					for (const msg of [oldMessage, message]) if (msg.partial) await msg.fetch();
-					if (oldMessage.content === message.content) return;
+			if (this._options.handleEdits)
+				this.client.on(
+					'messageUpdate',
+					async (oldMessage: Message | PartialMessage, message: Message | PartialMessage): Promise<void> => {
+						for (const msg of [oldMessage, message]) if (msg.partial) await msg.fetch();
+						if (oldMessage.content === message.content) return;
 
-					this._handle(message as Message);
-				});
-		});
+						this._handle(message as Message);
+					},
+				);
 	}
 
 	public register(command: Command, path: string): void {
@@ -55,12 +61,7 @@ export class CommandHandler extends BaseHandler {
 
 		for (const alias of command.options.aliases) {
 			const conflict: string | undefined = this.aliases.get(alias.toLowerCase());
-
-			if (conflict) {
-				Logger.exit(1, `Command ${command.identifier} has conflicting alias '${alias}' with command '${conflict}'`);
-				return;
-			}
-
+			if (conflict) return Logger.exit(1, `Command ${command.identifier} has conflicting alias '${alias}' with command '${conflict}'`);
 			this.aliases.set(alias.toLowerCase(), command.identifier);
 		}
 	}
@@ -72,11 +73,12 @@ export class CommandHandler extends BaseHandler {
 	}
 
 	protected async _handle(message: Message): Promise<void> {
-		if (this._fetchMembers && message.guild && !message.member && !message.webhookID) await message.guild.members.fetch(message.author);
+		if (this._options.fetchMembers && message.guild && !message.member && !message.webhookID) await message.guild.members.fetch(message.author);
 
 		const { command, content, alias, prefix } = this._parseCommand(message);
 
 		if (!command) return;
+		if (await this._handlePermissions(message, command)) return;
 
 		await this._runCommand(message, command, content?.slice(alias?.length! + prefix?.length!).split(/ +/));
 	}
@@ -88,8 +90,8 @@ export class CommandHandler extends BaseHandler {
 	}
 
 	protected _parseCommand(message: Message): Partial<IParseResult> {
-		if (this._allowMention) this._prefix = [...[`<@${this.client.user?.id}>`, `<@!${this.client.user?.id}>`], ...(Array.isArray(this._prefix) ? this._prefix : [this._prefix])];
-		return this._parsePrefix(message, this._prefix);
+		if (this._options.allowMention) this._options.prefix = [...[`<@${this.client.user?.id}>`, `<@!${this.client.user?.id}>`], ...(Array.isArray(this._options.prefix) ? this._options.prefix : [this._options.prefix!])];
+		return this._parsePrefix(message, this._options.prefix);
 	}
 
 	protected _parsePrefix(message: Message, prefix?: string | string[]): Partial<IParseResult> {
@@ -108,6 +110,50 @@ export class CommandHandler extends BaseHandler {
 			content: message.content.slice(startOfArgs + (alias.length + 1)).trim(),
 			afterPrefix: message.content.slice(prefix.length).trim(),
 		};
+	}
+
+	protected _returnEmitReason(key: keyof typeof EVENTS_REASONS, ...args: [Message, Command]): string {
+		return EVENTS_REASONS[key](...args);
+	}
+
+	protected _emitAndReturn<T>(returned: T, event: string, ...args: [keyof typeof EVENTS_REASONS, Message, Command]): T {
+		this.emit(event, ...args);
+		Util.logIfActivated(Logger.warn, this, this._returnEmitReason(...args));
+		return returned;
+	}
+
+	protected async _handlePermissions(message: Message, command: Command): Promise<boolean> {
+		if (command.options.ownerOnly && !this.client._options.owners?.includes(message.author.id)) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'owner', message, command);
+		if (command.options.channel === 'guild' && !message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'guild', message, command);
+		if (command.options.channel === 'dm' && message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'owner', message, command);
+		if (this._options.blockClient && message.author.id === this.client.user?.id) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'client', message, command);
+		if (this._options.blockBots && message.author.bot) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'bot', message, command);
+		if (await this._runPermissionsChecks(message, command)) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'permissions', message, command);
+
+		return false;
+	}
+
+	public async _runPermissionsChecks(message: Message, command: Command): Promise<boolean> {
+		if (command.options.clientPermissions && message.guild) {
+			const missing: PermissionString[] | undefined = message.guild.me?.permissionsIn(message.channel).missing(command.options.clientPermissions);
+			
+			if (missing && missing.length) {
+				this.emit(EVENTS.COMMAND_HANDLER.MISSING_PERMISSIONS, message, command, 'client', missing);
+				return true;
+			}
+		}
+
+		if (command.options.userPermissions && !this.client._options.owners?.includes(message.author.id)) {
+			if (message.guild && !message.member && !message.webhookID) await message.guild.members.fetch(message.author);
+			const missing: PermissionString[] | undefined = message.member?.permissionsIn(message.channel).missing(command.options.userPermissions);
+
+			if (missing && missing.length) {
+				this.emit(EVENTS.COMMAND_HANDLER.MISSING_PERMISSIONS, message, command, 'user', missing);
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public findCommand(name: string): Command | undefined {

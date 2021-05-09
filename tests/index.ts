@@ -1,10 +1,10 @@
 import { ClientOptions, Intents } from 'discord.js';
 import { resolve } from 'path';
-import { ShensuoClient, Logger, CommandHandler, IShensuoClientOptions } from '../src';
+import { ShensuoClient, Logger, CommandHandler, IShensuoClientOptions, EVENTS } from '../src';
 import { token, prefix } from './config.json';
 
 class TestingBot extends ShensuoClient {
-	public constructor(private readonly _options: IShensuoClientOptions & ClientOptions) {
+	public constructor(public readonly _options: IShensuoClientOptions & ClientOptions) {
 		super(_options);
 	}
 
@@ -22,12 +22,11 @@ class TestingBot extends ShensuoClient {
 		});
 
 		await super.login(this._options.token);
-
 		return this;
 	}
 }
 
-new TestingBot({ 
+new TestingBot({
 	token,
-	intents: Intents.ALL
+	intents: Intents.ALL,
 }).start();

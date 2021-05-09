@@ -4,4 +4,4 @@ export * from './Logger';
 export * from './Util';
 
 export * from './commands';
-export * from './extendable'
+export * from './extendable';

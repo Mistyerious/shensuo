@@ -1,4 +1,5 @@
-import { PermissionResolvable, Snowflake } from 'discord.js';
+import { PermissionResolvable, Snowflake, ClientEvents } from 'discord.js';
+import { default as EventEmitter } from 'events';
 import { Command } from '.';
 
 export interface IBaseModuleOptions {
@@ -12,7 +13,10 @@ export interface ICommandHandlerOptions extends IBaseHandlerOptions {
 	allowMention?: boolean;
 	handleEdits?: boolean;
 	fetchMembers?: boolean;
+	ownersIgnorePermissions?: boolean;
 }
+
+export type IEventHandlerOptions = IBaseHandlerOptions;
 
 export interface IParseResult {
 	command: Command;
@@ -28,13 +32,22 @@ export interface IBaseHandlerOptions {
 	logging?: boolean;
 }
 
-export interface ICommandOptions {
+interface IOptions {
+	category?: string;
+}
+
+export interface ICommandOptions extends IOptions {
 	aliases?: string[];
 	clientPermissions?: PermissionResolvable | PermissionResolvable[];
 	userPermissions?: PermissionResolvable | PermissionResolvable[];
 	ownerOnly?: boolean;
 	description?: Record<string, unknown>;
-	category?: string;
+	channel?: 'guild' | 'dm';
+}
+
+export interface IEventOptions extends IOptions {
+	emitter: string | EventEmitter;
+	event: keyof ClientEvents | string;
 }
 
 export interface ILogTypes {

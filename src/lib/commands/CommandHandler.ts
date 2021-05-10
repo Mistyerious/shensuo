@@ -32,26 +32,27 @@ export class CommandHandler extends BaseHandler {
 			ownersIgnorePermissions,
 		};
 
-			this.client.on(
-				'message',
-				async (message: Message): Promise<void> => {
-					if ((this._options.blockClient && message.author.id === this.client.user?.id) || (this._options.blockBots && message.author.bot)) return;
-					if (message.partial) await message.fetch();
+		this.client.on(
+			'message',
+			async (message: Message): Promise<void> => {
+				if ((this._options.blockClient && message.author.id === this.client.user?.id) || (this._options.blockBots && message.author.bot)) return;
+				if (message.partial) await message.fetch();
 
-					await this._handle(message as Message);
+				await this._handle(message as Message);
+			},
+		);
+
+
+		if (this._options.handleEdits)
+			this.client.on(
+				'messageUpdate',
+				async (oldMessage: Message | PartialMessage, message: Message | PartialMessage): Promise<void> => {
+					for (const msg of [oldMessage, message]) if (msg.partial) await msg.fetch();
+					if (oldMessage.content === message.content) return;
+
+					this._handle(message as Message);
 				},
 			);
-
-			if (this._options.handleEdits)
-				this.client.on(
-					'messageUpdate',
-					async (oldMessage: Message | PartialMessage, message: Message | PartialMessage): Promise<void> => {
-						for (const msg of [oldMessage, message]) if (msg.partial) await msg.fetch();
-						if (oldMessage.content === message.content) return;
-
-						this._handle(message as Message);
-					},
-				);
 	}
 
 	public register(command: Command, path: string): void {
@@ -73,7 +74,7 @@ export class CommandHandler extends BaseHandler {
 	}
 
 	protected async _handle(message: Message): Promise<void> {
-		if (this._options.fetchMembers && message.guild && !message.member && !message.webhookID) await message.guild.members.fetch(message.author);
+		if (this._options.fetchMembers && message.guild && !message.member && !message.webhookID) await message.guild?.members.fetch(message.author);
 
 		const { command, content, alias, prefix } = this._parseCommand(message);
 
@@ -136,7 +137,7 @@ export class CommandHandler extends BaseHandler {
 	public async _runPermissionsChecks(message: Message, command: Command): Promise<boolean> {
 		if (command.options.clientPermissions && message.guild) {
 			const missing: PermissionString[] | undefined = message.guild.me?.permissionsIn(message.channel).missing(command.options.clientPermissions);
-			
+
 			if (missing && missing.length) {
 				this.emit(EVENTS.COMMAND_HANDLER.MISSING_PERMISSIONS, message, command, 'client', missing);
 				return true;

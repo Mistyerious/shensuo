@@ -52,6 +52,7 @@ export interface IEventOptions extends IOptions {
 
 export interface ILogTypes {
 	info: string;
+	checkpoint: string;
 	success: string;
 	warn: string;
 	error: string;

@@ -1,12 +1,16 @@
 import { ILogTypes } from './Interfaces';
 import { EOL } from 'os';
 
-type LogTypes = 'info' | 'success' | 'warn' | 'error';
+type LogTypes = 'info' | 'success' | 'warn' | 'error' | 'checkpoint';
+type StaticLogger = Omit<Logger, '_checkpoints' | 'checkpoint'>;
 
 export class Logger {
-	protected static readonly _symbols: ILogTypes = { info: 'ℹ', success: '✔', warn: '⚠', error: '✖' };
+	protected _checkpoints: number = 0;
+
+	protected static readonly _symbols: ILogTypes = { info: 'ℹ', success: '✔', warn: '⚠', error: '✖', checkpoint: 'ℹ' };
 	protected static readonly _colours = {
 		info: [143, 188, 187],
+		checkpoint: [143, 188, 187],
 		success: [161, 188, 138],
 		error: [191, 97, 106],
 		warn: [235, 203, 139],
@@ -17,25 +21,26 @@ export class Logger {
 		return `\x1b[38;2;${r};${g};${b}m${args.join(' ')}\x1b[0m`;
 	}
 
-	protected static write(colour: number[], level: LogTypes, ...message: unknown[]): Logger {
+	protected static write(colour: number[], level: LogTypes, ...message: unknown[]): StaticLogger {
 		process.stdout.write(
 			`${Logger._rgb(Logger._colours[level], Logger._symbols[level])} ${Logger._rgb(Logger._colours.foreground, new Date().toLocaleString())} ${Logger._rgb(colour, level.toUpperCase())} (shensuo) ${Logger._rgb(
 				colour,
 				message,
 			)}${EOL}`,
 		);
+
 		return Logger;
 	}
 
-	public static info(...message: string[]): Logger {
+	public static info(...message: string[]): StaticLogger {
 		return Logger.write(Logger._colours.info, 'info', message);
 	}
 
-	public static success(...message: string[]): Logger {
+	public static success(...message: string[]): StaticLogger {
 		return Logger.write(Logger._colours.success, 'success', message);
 	}
 
-	public static error(...message: string[]): Logger {
+	public static error(...message: string[]): StaticLogger {
 		return Logger.write(Logger._colours.error, 'error', message);
 	}
 
@@ -44,7 +49,13 @@ export class Logger {
 		process.exit(code);
 	}
 
-	public static warn(...message: string[]): Logger {
+	public static warn(...message: string[]): StaticLogger {
 		return Logger.write(Logger._colours.warn, 'warn', message);
+	}
+
+	public checkpoint(): StaticLogger {
+		Logger.write(Logger._colours.info, 'info', `Checkpoint ${this._checkpoints} reached.`);
+		this._checkpoints++;
+		return Logger;
 	}
 }

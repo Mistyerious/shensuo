@@ -29,4 +29,5 @@ class TestingBot extends ShensuoClient {
 new TestingBot({
 	token,
 	intents: Intents.ALL,
+	partials: ['CHANNEL']
 }).start();

@@ -1,9 +1,16 @@
 import { PermissionResolvable, Snowflake, ClientEvents } from 'discord.js';
 import { default as EventEmitter } from 'events';
 import { Command } from '.';
+import { EVENTS_REASONS } from './Constants';
 
 export interface IBaseModuleOptions {
 	category: string;
+}
+
+// ! I know this is not the prettiest way to do it, if you have better ideas lmk, thanks.
+export interface IEmitReasonArgs {
+	key: keyof typeof EVENTS_REASONS;
+	rest: any;
 }
 
 export interface ICommandHandlerOptions extends IBaseHandlerOptions {

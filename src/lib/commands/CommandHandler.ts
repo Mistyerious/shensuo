@@ -2,6 +2,7 @@ import { Collection, Message, PartialMessage, PermissionString } from 'discord.j
 import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger } from '..';
 import { EVENTS_REASONS } from '../Constants';
 import { BaseHandler } from '../extendable/BaseHandler';
+import { IEmitReasonArgs } from '../Interfaces';
 import { Util } from '../Util';
 
 export class CommandHandler extends BaseHandler {
@@ -32,27 +33,20 @@ export class CommandHandler extends BaseHandler {
 			ownersIgnorePermissions,
 		};
 
-		this.client.on(
-			'message',
-			async (message: Message): Promise<void> => {
-				if ((this._options.blockClient && message.author.id === this.client.user?.id) || (this._options.blockBots && message.author.bot)) return;
-				if (message.partial) await message.fetch();
+		this.client.on('message', async (message: Message): Promise<void> => {
+			if ((this._options.blockClient && message.author.id === this.client.user?.id) || (this._options.blockBots && message.author.bot)) return;
+			if (message.partial) await message.fetch();
 
-				await this._handle(message as Message);
-			},
-		);
-
+			await this._handle(message as Message);
+		});
 
 		if (this._options.handleEdits)
-			this.client.on(
-				'messageUpdate',
-				async (oldMessage: Message | PartialMessage, message: Message | PartialMessage): Promise<void> => {
-					for (const msg of [oldMessage, message]) if (msg.partial) await msg.fetch();
-					if (oldMessage.content === message.content) return;
+			this.client.on('messageUpdate', async (oldMessage: Message | PartialMessage, message: Message | PartialMessage): Promise<void> => {
+				for (const msg of [oldMessage, message]) if (msg.partial) await msg.fetch();
+				if (oldMessage.content === message.content) return;
 
-					this._handle(message as Message);
-				},
-			);
+				this._handle(message as Message);
+			});
 	}
 
 	public register(command: Command, path: string): void {
@@ -113,34 +107,34 @@ export class CommandHandler extends BaseHandler {
 		};
 	}
 
-	protected _returnEmitReason(key: keyof typeof EVENTS_REASONS, ...args: [Message, Command]): string {
-		return EVENTS_REASONS[key](...args);
-	}
-
-	protected _emitAndReturn<T>(returned: T, event: string, ...args: [keyof typeof EVENTS_REASONS, Message, Command]): T {
-		this.emit(event, ...args);
-		Util.logIfActivated(Logger.warn, this, this._returnEmitReason(...args));
+	protected _emitAndReturn<T>(returned: T, event: string, args: IEmitReasonArgs): T {
+		this.emit(event, args.rest);
+		Util.logIfActivated(Logger.warn, this, EVENTS_REASONS[args.key](args.rest));
 		return returned;
 	}
 
 	protected async _handlePermissions(message: Message, command: Command): Promise<boolean> {
-		if (command.options.ownerOnly && !this.client._options.owners?.includes(message.author.id)) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'owner', message, command);
-		if (command.options.channel === 'guild' && !message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'guild', message, command);
-		if (command.options.channel === 'dm' && message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'owner', message, command);
-		if (this._options.blockClient && message.author.id === this.client.user?.id) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'client', message, command);
-		if (this._options.blockBots && message.author.bot) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'bot', message, command);
-		if (await this._runPermissionsChecks(message, command)) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, 'permissions', message, command);
+		const rest = { message, command };
+		if (command.options.ownerOnly && !this.client._options.owners?.includes(message.author.id)) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'owner', rest });
+		if (command.options.channel === 'guild' && !message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'guild', rest });
+		if (command.options.channel === 'dm' && message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'dm', rest });
+		if (this._options.blockClient && message.author.id === this.client.user?.id) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'client', rest });
+		if (this._options.blockBots && message.author.bot) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'dm', rest });
+		
+		const permissions: boolean | [ boolean, 'clientPermissions' | 'userPermissions'] = await this._runPermissionsChecks(message, command)
+		
+		if (Array.isArray(permissions)) return this._emitAndReturn<boolean>(permissions[0], EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: permissions[1], rest });
 
 		return false;
 	}
 
-	public async _runPermissionsChecks(message: Message, command: Command): Promise<boolean> {
+	public async _runPermissionsChecks(message: Message, command: Command): Promise<[boolean, 'clientPermissions' | 'userPermissions'] | boolean> {
 		if (command.options.clientPermissions && message.guild) {
 			const missing: PermissionString[] | undefined = message.guild.me?.permissionsIn(message.channel).missing(command.options.clientPermissions);
 
 			if (missing && missing.length) {
-				this.emit(EVENTS.COMMAND_HANDLER.MISSING_PERMISSIONS, message, command, 'client', missing);
-				return true;
+				this.emit(EVENTS.COMMAND_HANDLER.MISSING_PERMISSIONS, message, command, 'clientPermissions', missing);
+				return [true, 'clientPermissions'];
 			}
 		}
 
@@ -149,8 +143,8 @@ export class CommandHandler extends BaseHandler {
 			const missing: PermissionString[] | undefined = message.member?.permissionsIn(message.channel).missing(command.options.userPermissions);
 
 			if (missing && missing.length) {
-				this.emit(EVENTS.COMMAND_HANDLER.MISSING_PERMISSIONS, message, command, 'user', missing);
-				return true;
+				this.emit(EVENTS.COMMAND_HANDLER.MISSING_PERMISSIONS, message, command, 'userPermissions', missing);
+				return [true, 'userPermissions'];
 			}
 		}
 

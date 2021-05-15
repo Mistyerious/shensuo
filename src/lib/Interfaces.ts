@@ -1,7 +1,16 @@
-import { PermissionResolvable, Snowflake, ClientEvents } from 'discord.js';
+import { PermissionResolvable, Snowflake, ClientEvents, Message, PermissionString } from 'discord.js';
 import { default as EventEmitter } from 'events';
 import { Command } from '.';
 import { EVENTS_REASONS } from './Constants';
+
+export type Permissions = 'clientPermissions' | 'userPermissions';
+
+export interface CommandHandlerEvents {
+	commandStarted: [message: Message, command: Command, args: unknown[]];
+	commandFinished: [message: Message, command: Command, args: unknown[]];
+	commandBlocked: [reason: keyof typeof EVENTS_REASONS, message: Message, command: Command];
+	missingPermissions: [message: Message, command: Command, reason: Permissions, missing: PermissionString[]];
+}
 
 export interface IBaseModuleOptions {
 	category: string;
@@ -55,6 +64,7 @@ export interface ICommandOptions extends IOptions {
 export interface IEventOptions extends IOptions {
 	emitter: string | EventEmitter;
 	event: keyof ClientEvents | string;
+	type?: 'on' | 'once';
 }
 
 export interface ILogTypes {

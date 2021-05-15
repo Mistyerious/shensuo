@@ -2,10 +2,10 @@ import { Collection, Message, PartialMessage, PermissionString } from 'discord.j
 import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger } from '..';
 import { EVENTS_REASONS } from '../Constants';
 import { BaseHandler } from '../extendable/BaseHandler';
-import { IEmitReasonArgs } from '../Interfaces';
+import { CommandHandlerEvents, IEmitReasonArgs, Permissions } from '../Interfaces';
 import { Util } from '../Util';
 
-export class CommandHandler extends BaseHandler {
+export class CommandHandler extends BaseHandler<CommandHandlerEvents> {
 	public readonly aliases: Collection<string, string> = new Collection();
 	public readonly modules: Collection<string, Command> = new Collection();
 	protected readonly _options: ICommandHandlerOptions;
@@ -108,7 +108,7 @@ export class CommandHandler extends BaseHandler {
 	}
 
 	protected _emitAndReturn<T>(returned: T, event: string, args: IEmitReasonArgs): T {
-		this.emit(event, args.rest);
+		this.emit(event, ...args.rest);
 		Util.logIfActivated(Logger.warn, this, EVENTS_REASONS[args.key](args.rest));
 		return returned;
 	}
@@ -120,15 +120,15 @@ export class CommandHandler extends BaseHandler {
 		if (command.options.channel === 'dm' && message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'dm', rest });
 		if (this._options.blockClient && message.author.id === this.client.user?.id) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'client', rest });
 		if (this._options.blockBots && message.author.bot) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'dm', rest });
-		
-		const permissions: boolean | [ boolean, 'clientPermissions' | 'userPermissions'] = await this._runPermissionsChecks(message, command)
-		
+
+		const permissions: boolean | [boolean, Permissions] = await this._runPermissionsChecks(message, command);
+
 		if (Array.isArray(permissions)) return this._emitAndReturn<boolean>(permissions[0], EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: permissions[1], rest });
 
 		return false;
 	}
 
-	public async _runPermissionsChecks(message: Message, command: Command): Promise<[boolean, 'clientPermissions' | 'userPermissions'] | boolean> {
+	public async _runPermissionsChecks(message: Message, command: Command): Promise<[boolean, Permissions] | boolean> {
 		if (command.options.clientPermissions && message.guild) {
 			const missing: PermissionString[] | undefined = message.guild.me?.permissionsIn(message.channel).missing(command.options.clientPermissions);
 

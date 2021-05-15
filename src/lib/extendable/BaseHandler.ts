@@ -4,7 +4,7 @@ import { statSync } from 'fs';
 import { extname, resolve } from 'path';
 import { Collection, Constructable } from 'discord.js';
 
-export abstract class BaseHandler extends EventEmitter {
+export abstract class BaseHandler<T extends Record<any, any>> extends EventEmitter {
 	public readonly modules: Collection<string, BaseModule> = new Collection();
 	public readonly categories: string[] = [];
 
@@ -20,6 +20,24 @@ export abstract class BaseHandler extends EventEmitter {
 
 		if (!statSync(this.options.directory).isDirectory()) Logger.exit(1, 'Specified directory does not exist.');
 	}
+
+	// ! I know this is trash, fix it for me kthx :3
+	public on<K extends keyof T>(event: K, listener: (...args: T[K]) => void): this {
+		return super.on(event as string | symbol, listener as (...args: any[]) => void);
+	};
+
+	public once<K extends keyof T>(event: K, listener: (...args: T[K]) => void): this {
+		return super.once(event as string | symbol, listener as (...args: any[]) => void);
+	};
+
+
+	public off<K extends keyof T>(event: K, listener: (...args: T[K]) => void): this {
+		return super.off(event as string | symbol, listener as (...args: any[]) => void);
+	};
+
+	public removeAllListeners<K extends keyof T>(event?: K): this {
+		return super.removeAllListeners(event as string | symbol)
+	};
 
 	public register(module: BaseModule, path?: string): void {
 		module.path = path;
@@ -75,7 +93,7 @@ export abstract class BaseHandler extends EventEmitter {
 	}
 
 	public remove(identifier: string): BaseModule | undefined {
-		const mod = this.modules.get(identifier);
+		const mod: BaseModule | undefined = this.modules.get(identifier);
 
 		if (!mod) {
 			Logger.exit(1, `${this.constructor.name} '${identifier}' not found.`);

@@ -7,13 +7,14 @@ import { BaseModule } from '../extendable/BaseModule';
 export abstract class Event<T extends keyof ClientEvents> extends BaseModule {
 	public readonly options: IEventOptions;
 
-	public constructor(identifier: string, { emitter, category = 'default', event }: IEventOptions) {
+	public constructor(identifier: string, { emitter, category = 'default', event, type = 'on' }: IEventOptions) {
 		super(identifier, { category });
 
 		this.options = {
 			emitter,
 			category,
 			event,
+			type
 		};
 	}
 

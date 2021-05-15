@@ -2,9 +2,10 @@ import { BaseHandler } from '.';
 import { resolve } from 'path';
 import { readdirSync, Dirent } from 'fs';
 import { GuildMember, BitFieldResolvable, PermissionString } from 'discord.js';
+import { default as EventEmitter } from 'events';
 
 export class Util {
-	public static logIfActivated(method: Function, handler: BaseHandler, ...args: unknown[]): void {
+	public static logIfActivated(method: Function, handler: BaseHandler<any>, ...args: unknown[]): void {
 		if (handler.options.logging) method(...args);
 	}
 
@@ -14,6 +15,10 @@ export class Util {
 
 	public static isPromise(target: unknown): boolean {
 		return target instanceof Promise && typeof target.then === 'function' && typeof target.catch === 'function';
+	}
+
+	public static isEventEmitter(target: unknown): boolean {
+		return target instanceof EventEmitter && typeof target.on === 'function' && typeof target.emit === 'function';
 	}
 
 	public static glob(directory: string, matches: string[] = []): string[] {

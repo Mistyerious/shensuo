@@ -31,8 +31,9 @@ class TestingBot extends ShensuoClient {
 	});
 
 	public async start(): Promise<this> {
+		await super.start();
 		await this.commandHandler.loadAll();
-
+		
 		this.eventHandler.setEmitters({
 			client: this,
 			commandHandler: this.commandHandler,

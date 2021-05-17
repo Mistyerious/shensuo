@@ -5,7 +5,7 @@ export default class ReadyEvent extends Event<'ready'> {
 		super('ready', {
 			emitter: 'client',
 			event: 'ready',
-			type: 'once'
+			type: 'once',
 		});
 	}
 

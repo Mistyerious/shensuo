@@ -9,6 +9,6 @@ export default class ReadyEvent extends Event<'ready'> {
 	}
 
 	public exec(): void {
-		return void Logger.success(`${this.client?.user?.tag} is now online.`);
+		Logger.success(`${this.client?.user?.tag} is now online.`);
 	}
 }

@@ -3,7 +3,15 @@ import { resolve } from 'path';
 import { ShensuoClient, Logger, CommandHandler, IShensuoClientOptions, EventHandler } from '../src';
 import { token, prefix } from './config.json';
 
+declare module '../src/lib/extendable/ShensuoClient' {
+  interface ShensuoClient {
+    logger: typeof Logger;
+  }
+}
+
 class TestingBot extends ShensuoClient {
+	public readonly logger: typeof Logger = Logger;
+
 	public constructor(public readonly _options: IShensuoClientOptions & ClientOptions) {
 		super(_options);
 	}
@@ -14,7 +22,6 @@ class TestingBot extends ShensuoClient {
 		logging: true,
 		allowMention: true,
 		handleEdits: true,
-		ownersIgnorePermissions: false
 	});
 
 	public readonly eventHandler: EventHandler = new EventHandler(this, {
@@ -25,16 +32,11 @@ class TestingBot extends ShensuoClient {
 		await this.commandHandler.loadAll();
 
 		this.eventHandler.setEmitters({
-			'client': this,
-			'commandHandler': this.commandHandler
-		})
-
-		await this.eventHandler.loadAll();
-
-		this.once('ready', () => {
-			Logger.success(`${this.user?.tag} is now online!`);
+			client: this,
+			commandHandler: this.commandHandler,
 		});
 
+		await this.eventHandler.loadAll();
 		await super.login(this._options.token);
 
 		return this;

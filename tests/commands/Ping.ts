@@ -9,7 +9,7 @@ export default class extends Command {
 		});
 	}
 
-	public exec(message: Message, args: unknown): void {
+	public exec(message: Message, _args: unknown): void {
 		const embed = new MessageEmbed()
 			.setColor('RED')
 			.setDescription('**`Pong`**!')

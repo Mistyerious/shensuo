@@ -8,7 +8,7 @@ export default class BlockClient extends Command {
     });
   }
 
-  public exec(message: Message, args: unknown): void {
-    message.channel.send(`>>ping`)
+  public exec(message: Message, _args: unknown): void {
+    message.channel.send('>>ping')
   }
 }

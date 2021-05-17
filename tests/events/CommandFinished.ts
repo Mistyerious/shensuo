@@ -1,16 +1,15 @@
-import { Command, Event } from "../../src/";
-import { Message } from "discord.js";
-
+import { Command, Event } from '../../src/';
+import { Message } from 'discord.js';
 
 export default class CommandFinished extends Event<'commandFinished'> {
-  constructor() {
-    super('commandFinished', {
-      emitter: 'commandHandler',
-      event: 'commandFinished'
-    });
-  }
+	public constructor() {
+		super('commandFinished', {
+			emitter: 'commandHandler',
+			event: 'commandFinished',
+		});
+	}
 
-  async exec(_: Message, command: Command) {
-    console.log(`${command.identifier} has just finished`)
-  }
+	public exec(_: Message, command: Command): void {
+		this.client?.logger.info(`${command.identifier} has just finished running`);
+	}
 }

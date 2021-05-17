@@ -1,7 +1,7 @@
 import { ClientEvents, Collection } from 'discord.js';
 import { default as EventEmitter } from 'events';
 import { IEventHandlerOptions, ShensuoClient, Command, Logger, IShensuoEvents } from '..';
-import { BaseHandler } from "../extendable";
+import { BaseHandler } from '../extendable';
 import { Util } from '../Util';
 import { Event } from './Event';
 

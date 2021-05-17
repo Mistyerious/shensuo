@@ -1,9 +1,5 @@
 import { Collection, Message, PartialMessage, PermissionString } from 'discord.js';
-import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger } from '..';
-import { EVENTS_REASONS } from '../Constants';
-import { BaseHandler } from "../extendable";
-import { IShensuoEvents, IEmitReasonArgs, Permissions } from '../Interfaces';
-import { Util } from '../Util';
+import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger, EVENTS_REASONS, BaseHandler, IShensuoEvents, IEmitReasonArgs, Util, Permissions } from '..';
 
 export class CommandHandler extends BaseHandler<IShensuoEvents> {
 	public readonly aliases: Collection<string, string> = new Collection();
@@ -29,7 +25,7 @@ export class CommandHandler extends BaseHandler<IShensuoEvents> {
 			allowMention,
 			logging,
 			directory,
-			fetchMembers
+			fetchMembers,
 		};
 
 		this.client.on('message', async (message: Message): Promise<void> => {
@@ -83,12 +79,12 @@ export class CommandHandler extends BaseHandler<IShensuoEvents> {
 		this.emit(EVENTS.COMMAND_HANDLER.COMMAND_FINISHED, message, command, args);
 	}
 
-	protected _parseCommand(message: Message): Partial<IParseResult> {
+	protected _parseCommand(message: Message): IParseResult | Partial<IParseResult> {
 		if (this._options.allowMention) this._options.prefix = [...[`<@${this.client.user?.id}>`, `<@!${this.client.user?.id}>`], ...(Array.isArray(this._options.prefix) ? this._options.prefix : [this._options.prefix!])];
 		return this._parsePrefix(message, this._options.prefix);
 	}
 
-	protected _parsePrefix(message: Message, prefix?: string | string[]): Partial<IParseResult> {
+	protected _parsePrefix(message: Message, prefix?: string | string[]): IParseResult | Partial<IParseResult> {
 		const lowerContent: string = message.content.toLowerCase();
 
 		if (Array.isArray(prefix)) prefix = prefix.find((prefix: string): boolean => lowerContent.startsWith(prefix));

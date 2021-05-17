@@ -1,5 +1,5 @@
-import { Message, PermissionString } from "discord.js";
-import { BaseModule, Command } from ".";
+import { Message } from 'discord.js';
+import { Command } from '.';
 
 export const EVENTS = {
 	BASE_HANDLER: {

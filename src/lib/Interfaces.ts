@@ -1,17 +1,14 @@
-import { PermissionResolvable, Snowflake, ClientEvents, Message, PermissionString } from 'discord.js';
+import { PermissionResolvable, Snowflake, Message, PermissionString } from 'discord.js';
 import { default as EventEmitter } from 'events';
-import { Command, BaseModule } from ".";
-import { EVENTS_REASONS } from './Constants';
-
-export type Permissions = 'clientPermissions' | 'userPermissions';
+import { Command, BaseModule, EVENTS_REASONS, UnionEvents } from '.';
 
 export interface IShensuoEvents {
-	load: [module: BaseModule, isReload: boolean]
-	remove: [module: BaseModule]
-	commandStarted: [message: Message, command: Command, args: unknown[]]
-	commandFinished: [message: Message, command: Command, args: unknown[], returnValue: unknown[]]
-	commandBlocked: [message: Message, command: Command, reason: keyof typeof EVENTS_REASONS]
-	missingPermissions: [message: Message, command: Command, type: string, missing: PermissionString[]]
+	load: [module: BaseModule, isReload: boolean];
+	remove: [module: BaseModule];
+	commandStarted: [message: Message, command: Command, args: unknown[]];
+	commandFinished: [message: Message, command: Command, args: unknown[], returnValue: unknown[]];
+	commandBlocked: [message: Message, command: Command, reason: keyof typeof EVENTS_REASONS];
+	missingPermissions: [message: Message, command: Command, type: string, missing: PermissionString[]];
 }
 
 // ! I know this is not the prettiest way to do it, if you have better ideas lmk, thanks.
@@ -24,7 +21,7 @@ export type IEventHandlerOptions = IBaseHandlerOptions;
 
 export interface IEventOptions extends IOptions {
 	emitter: string | EventEmitter;
-	event: keyof ClientEvents | keyof IShensuoEvents | string;
+	event: UnionEvents | string;
 	type?: 'on' | 'once';
 }
 
@@ -49,7 +46,6 @@ export interface ICommandOptions extends IOptions {
 	description?: Record<string, unknown>;
 	channel?: 'guild' | 'dm';
 }
-
 
 export interface IParseResult {
 	command: Command;
@@ -81,4 +77,3 @@ export interface IShensuoClientOptions {
 	owners?: Snowflake | Snowflake[];
 	token?: string;
 }
-

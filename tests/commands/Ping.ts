@@ -5,7 +5,7 @@ export default class extends Command {
 	public constructor() {
 		super('ping', {
 			aliases: ['ping', 'pong'],
-			userPermissions: ['ADMINISTRATOR']
+			userPermissions: ['ADMINISTRATOR'],
 		});
 	}
 

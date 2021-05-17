@@ -3,9 +3,10 @@ import { resolve } from 'path';
 import { readdirSync, Dirent } from 'fs';
 import { GuildMember, BitFieldResolvable, PermissionString } from 'discord.js';
 import { default as EventEmitter } from 'events';
+import { Logger } from './Logger';
 
 export class Util {
-	public static logIfActivated(method: Function, handler: BaseHandler<any>, ...args: unknown[]): void {
+	public static logIfActivated(method: (...message: string[]) => typeof Logger, handler: BaseHandler<any>, ...args: string[]): void {
 		if (handler.options.logging) method(...args);
 	}
 

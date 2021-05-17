@@ -24,20 +24,19 @@ export abstract class BaseHandler<T extends Record<any, any>> extends EventEmitt
 	// ! I know this is trash, fix it for me kthx :3
 	public on<K extends keyof T>(event: K, listener: (...args: T[K]) => void): this {
 		return super.on(event as string | symbol, listener as (...args: any[]) => void);
-	};
+	}
 
 	public once<K extends keyof T>(event: K, listener: (...args: T[K]) => void): this {
 		return super.once(event as string | symbol, listener as (...args: any[]) => void);
-	};
-
+	}
 
 	public off<K extends keyof T>(event: K, listener: (...args: T[K]) => void): this {
 		return super.off(event as string | symbol, listener as (...args: any[]) => void);
-	};
+	}
 
 	public removeAllListeners<K extends keyof T>(event?: K): this {
-		return super.removeAllListeners(event as string | symbol)
-	};
+		return super.removeAllListeners(event as string | symbol);
+	}
 
 	public register(module: BaseModule, path?: string): void {
 		module.path = path;

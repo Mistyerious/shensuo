@@ -1,10 +1,10 @@
-import { ClientEvents } from 'discord.js';
-import { IEventOptions, IShensuoEvents } from "..";
+import { IEventOptions, UnionEvents } from '..';
 
 // ! Won't import via barrel so I'm just doing it like this. Same holds true for handlers.
-import { BaseModule } from "../extendable";
+import { BaseModule } from '../extendable';
+import { IntersectedEvents } from '../Types';
 
-export abstract class Event<T extends keyof ClientEvents | keyof IShensuoEvents> extends BaseModule {
+export abstract class Event<T extends UnionEvents> extends BaseModule {
 	public readonly options: IEventOptions;
 
 	public constructor(identifier: string, { emitter, category = 'default', event, type = 'on' }: IEventOptions) {
@@ -14,9 +14,9 @@ export abstract class Event<T extends keyof ClientEvents | keyof IShensuoEvents>
 			emitter,
 			category,
 			event,
-			type
+			type,
 		};
 	}
 
-	public abstract exec(...args: (ClientEvents & IShensuoEvents)[T]): any;
+	public abstract exec(...args: IntersectedEvents[T]): any;
 }

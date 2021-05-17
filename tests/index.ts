@@ -4,9 +4,9 @@ import { ShensuoClient, Logger, CommandHandler, IShensuoClientOptions, EventHand
 import { token, prefix } from './config.json';
 
 declare module '../src/lib/extendable/ShensuoClient' {
-  interface ShensuoClient {
-    logger: typeof Logger;
-  }
+	interface ShensuoClient {
+		logger: typeof Logger;
+	}
 }
 
 class TestingBot extends ShensuoClient {

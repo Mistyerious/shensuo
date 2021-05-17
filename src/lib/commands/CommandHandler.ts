@@ -1,18 +1,18 @@
 import { Collection, Message, PartialMessage, PermissionString } from 'discord.js';
 import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger } from '..';
 import { EVENTS_REASONS } from '../Constants';
-import { BaseHandler } from '../extendable/BaseHandler';
-import { CommandHandlerEvents, IEmitReasonArgs, Permissions } from '../Interfaces';
+import { BaseHandler } from "../extendable";
+import { IShensuoEvents, IEmitReasonArgs, Permissions } from '../Interfaces';
 import { Util } from '../Util';
 
-export class CommandHandler extends BaseHandler<CommandHandlerEvents> {
+export class CommandHandler extends BaseHandler<IShensuoEvents> {
 	public readonly aliases: Collection<string, string> = new Collection();
 	public readonly modules: Collection<string, Command> = new Collection();
 	protected readonly _options: ICommandHandlerOptions;
 
 	public constructor(
 		public readonly client: ShensuoClient,
-		{ extensions = ['.js', '.ts'], handleEdits = true, blockClient = true, blockBots = true, prefix = '!', allowMention = true, logging = true, directory, fetchMembers = false, ownersIgnorePermissions = true }: ICommandHandlerOptions,
+		{ extensions = ['.js', '.ts'], handleEdits = true, blockClient = true, blockBots = true, prefix = '!', allowMention = true, logging = true, directory, fetchMembers = false }: ICommandHandlerOptions,
 	) {
 		super(client, {
 			extensions,
@@ -29,8 +29,7 @@ export class CommandHandler extends BaseHandler<CommandHandlerEvents> {
 			allowMention,
 			logging,
 			directory,
-			fetchMembers,
-			ownersIgnorePermissions,
+			fetchMembers
 		};
 
 		this.client.on('message', async (message: Message): Promise<void> => {
@@ -120,7 +119,6 @@ export class CommandHandler extends BaseHandler<CommandHandlerEvents> {
 		if (command.options.channel === 'dm' && message.guild) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'dm', rest });
 		if (this._options.blockClient && message.author.id === this.client.user?.id) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'client', rest });
 		if (this._options.blockBots && message.author.bot) return this._emitAndReturn<boolean>(true, EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: 'dm', rest });
-
 		const permissions: boolean | [boolean, Permissions] = await this._runPermissionsChecks(message, command);
 
 		if (Array.isArray(permissions)) return this._emitAndReturn<boolean>(permissions[0], EVENTS.COMMAND_HANDLER.COMMAND_BLOCKED, { key: permissions[1], rest });

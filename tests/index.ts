@@ -12,6 +12,9 @@ class TestingBot extends ShensuoClient {
 		prefix,
 		directory: resolve(__dirname, 'commands'),
 		logging: true,
+		allowMention: true,
+		handleEdits: true,
+		ownersIgnorePermissions: false
 	});
 
 	public readonly eventHandler: EventHandler = new EventHandler(this, {
@@ -23,6 +26,7 @@ class TestingBot extends ShensuoClient {
 
 		this.eventHandler.setEmitters({
 			'client': this,
+			'commandHandler': this.commandHandler
 		})
 
 		await this.eventHandler.loadAll();
@@ -39,6 +43,6 @@ class TestingBot extends ShensuoClient {
 
 new TestingBot({
 	token,
-	intents: Intents.ALL,
+	intents: Intents.NON_PRIVILEGED,
 	partials: ['CHANNEL'],
 }).start();

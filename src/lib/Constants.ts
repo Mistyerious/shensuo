@@ -1,5 +1,5 @@
-import { Message } from "discord.js";
-import { Command } from ".";
+import { Message, PermissionString } from "discord.js";
+import { BaseModule, Command } from ".";
 
 export const EVENTS = {
 	BASE_HANDLER: {
@@ -13,7 +13,6 @@ export const EVENTS = {
 		MISSING_PERMISSIONS: 'missingPermissions',
 	},
 };
-
 
 export const EVENTS_REASONS = {
 	owner: ({ message, command }: { message: Message; command: Command }): string => `The execution of the command '${command.identifier}' was blocked as the user '${message.author.tag}' (${message.author.id}) is not an owner.`,

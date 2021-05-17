@@ -1,7 +1,7 @@
 import { ClientEvents, Collection } from 'discord.js';
 import { default as EventEmitter } from 'events';
-import { IEventHandlerOptions, ShensuoClient, Command, Logger } from '..';
-import { BaseHandler } from '../extendable/BaseHandler';
+import { IEventHandlerOptions, ShensuoClient, Command, Logger, IShensuoEvents } from '..';
+import { BaseHandler } from "../extendable";
 import { Util } from '../Util';
 import { Event } from './Event';
 
@@ -24,7 +24,7 @@ export class EventHandler extends BaseHandler<any> {
 		};
 	}
 
-	public register<T extends keyof ClientEvents>(event: Event<T>, path: string): Event<T> {
+	public register<T extends keyof ClientEvents | keyof IShensuoEvents>(event: Event<T>, path: string): Event<T> {
 		super.register(event, path);
 		this.addToEmitter(event.identifier);
 		return event;
@@ -35,7 +35,7 @@ export class EventHandler extends BaseHandler<any> {
 		super.deregister(event);
 	}
 
-	public addToEmitter<T extends keyof ClientEvents>(identifier: string): Event<T> | void {
+	public addToEmitter<T extends keyof ClientEvents | keyof IShensuoEvents>(identifier: string): Event<T> | void {
 		const listener: Event<T> | undefined = this.modules.get(identifier);
 		if (!listener) return Logger.exit(1, `'Event' '${identifier}' not found.`);
 
@@ -47,7 +47,7 @@ export class EventHandler extends BaseHandler<any> {
 		return listener;
 	}
 
-	public removeFromEmitter<T extends keyof ClientEvents>(identifier: string): Event<T> | void {
+	public removeFromEmitter<T extends keyof ClientEvents | keyof IShensuoEvents>(identifier: string): Event<T> | void {
 		const listener: Event<T> | undefined = this.modules.get(identifier.toString());
 		if (!listener) return Logger.exit(1, `'Event' '${identifier}' not found.`);
 

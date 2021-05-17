@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 import { ICommandOptions } from '..';
 
 // ! Won't import via barrel so I'm just doing it like this. Same holds true for handlers.
-import { BaseModule } from '../extendable/BaseModule';
+import { BaseModule } from "../extendable";
 
 export abstract class Command extends BaseModule {
 	public readonly options: ICommandOptions;

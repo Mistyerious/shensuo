@@ -1,25 +1,35 @@
 import { PermissionResolvable, Snowflake, ClientEvents, Message, PermissionString } from 'discord.js';
 import { default as EventEmitter } from 'events';
-import { Command } from '.';
+import { Command, BaseModule } from ".";
 import { EVENTS_REASONS } from './Constants';
 
 export type Permissions = 'clientPermissions' | 'userPermissions';
 
-export interface CommandHandlerEvents {
-	commandStarted: [message: Message, command: Command, args: unknown[]];
-	commandFinished: [message: Message, command: Command, args: unknown[]];
-	commandBlocked: [reason: keyof typeof EVENTS_REASONS, message: Message, command: Command];
-	missingPermissions: [message: Message, command: Command, reason: Permissions, missing: PermissionString[]];
-}
-
-export interface IBaseModuleOptions {
-	category: string;
+export interface IShensuoEvents {
+	load: [module: BaseModule, isReload: boolean]
+	remove: [module: BaseModule]
+	commandStarted: [message: Message, command: Command, args: unknown[]]
+	commandFinished: [message: Message, command: Command, args: unknown[], returnValue: unknown[]]
+	commandBlocked: [message: Message, command: Command, reason: keyof typeof EVENTS_REASONS]
+	missingPermissions: [message: Message, command: Command, type: string, missing: PermissionString[]]
 }
 
 // ! I know this is not the prettiest way to do it, if you have better ideas lmk, thanks.
 export interface IEmitReasonArgs {
 	key: keyof typeof EVENTS_REASONS;
 	rest: any;
+}
+
+export type IEventHandlerOptions = IBaseHandlerOptions;
+
+export interface IEventOptions extends IOptions {
+	emitter: string | EventEmitter;
+	event: keyof ClientEvents | keyof IShensuoEvents | string;
+	type?: 'on' | 'once';
+}
+
+export interface IBaseModuleOptions {
+	category: string;
 }
 
 export interface ICommandHandlerOptions extends IBaseHandlerOptions {
@@ -29,10 +39,17 @@ export interface ICommandHandlerOptions extends IBaseHandlerOptions {
 	allowMention?: boolean;
 	handleEdits?: boolean;
 	fetchMembers?: boolean;
-	ownersIgnorePermissions?: boolean;
 }
 
-export type IEventHandlerOptions = IBaseHandlerOptions;
+export interface ICommandOptions extends IOptions {
+	aliases?: string[];
+	clientPermissions?: PermissionResolvable | PermissionResolvable[];
+	userPermissions?: PermissionResolvable | PermissionResolvable[];
+	ownerOnly?: boolean;
+	description?: Record<string, unknown>;
+	channel?: 'guild' | 'dm';
+}
+
 
 export interface IParseResult {
 	command: Command;
@@ -52,21 +69,6 @@ interface IOptions {
 	category?: string;
 }
 
-export interface ICommandOptions extends IOptions {
-	aliases?: string[];
-	clientPermissions?: PermissionResolvable | PermissionResolvable[];
-	userPermissions?: PermissionResolvable | PermissionResolvable[];
-	ownerOnly?: boolean;
-	description?: Record<string, unknown>;
-	channel?: 'guild' | 'dm';
-}
-
-export interface IEventOptions extends IOptions {
-	emitter: string | EventEmitter;
-	event: keyof ClientEvents | string;
-	type?: 'on' | 'once';
-}
-
 export interface ILogTypes {
 	info: string;
 	checkpoint: string;
@@ -79,3 +81,4 @@ export interface IShensuoClientOptions {
 	owners?: Snowflake | Snowflake[];
 	token?: string;
 }
+

@@ -15,7 +15,6 @@ export class ShensuoClient extends Client {
 
 				if (application?.owner instanceof Team) {
 					for (const member of application.owner.members.array()) this._options.owners.push(member.id);
-					this._options.owners.push(application.owner.id); // ! Not sure if the owner is included in team members, if you know, hmu!
 				} else {
 					if (!application?.owner) await application?.owner?.fetch();
 					this._options.owners.push(application?.owner?.id!);

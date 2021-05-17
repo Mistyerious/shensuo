@@ -1,9 +1,7 @@
 import { Collection } from 'discord.js';
 import { default as EventEmitter } from 'events';
-import { IEventHandlerOptions, ShensuoClient, Logger, BaseHandler, Util, Event, UnionEvents } from '..';
-// // import { BaseHandler } from '../extendable';
-// // import { Util } from '../Util';
-// import { Event } from './Event';
+import { IEventHandlerOptions, ShensuoClient, Logger, Util, Event, UnionEvents } from '..';
+import { BaseHandler } from '../extendable';
 
 export class EventHandler extends BaseHandler<any> {
 	public readonly emitters: Collection<string, EventEmitter> = new Collection();
@@ -26,6 +24,8 @@ export class EventHandler extends BaseHandler<any> {
 
 	public register<T extends UnionEvents>(event: Event<T>, path: string): Event<T> {
 		super.register(event, path);
+		//@ts-ignore maybe in the future I'll be arsed to fix it
+		event.exec = event.exec.bind(event);
 		this.addToEmitter(event.identifier);
 		return event;
 	}

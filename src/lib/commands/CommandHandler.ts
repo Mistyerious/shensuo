@@ -1,5 +1,6 @@
 import { Collection, Message, PartialMessage, PermissionString } from 'discord.js';
-import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger, EVENTS_REASONS, BaseHandler, IShensuoEvents, IEmitReasonArgs, Util, Permissions } from '..';
+import { ICommandHandlerOptions, IParseResult, EVENTS, ShensuoClient, Command, Logger, EVENTS_REASONS, IShensuoEvents, IEmitReasonArgs, Util, Permissions } from '..';
+import { BaseHandler } from '../extendable';
 
 export class CommandHandler extends BaseHandler<IShensuoEvents> {
 	public readonly aliases: Collection<string, string> = new Collection();

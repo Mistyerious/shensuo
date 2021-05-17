@@ -1058,12 +1058,6 @@ semver@^7.2.1, semver@^7.3.2:
   dependencies:
     lru-cache "^6.0.0"
 
-sesso@ya-sach1/shensuo#master:
-  version "1.0.0"
-  resolved "https://codeload.github.com/ya-sach1/shensuo/tar.gz/413ab39551345b2ce2157961394363eb7ac0287c"
-  dependencies:
-    discord.js discordjs/discord.js
-
 shebang-command@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/shebang-command/-/shebang-command-2.0.0.tgz#ccd0af4f8835fbdc265b82461aaf0c36663f34ea"

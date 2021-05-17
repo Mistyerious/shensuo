@@ -26,6 +26,8 @@ class TestingBot extends ShensuoClient {
 
 	public readonly eventHandler: EventHandler = new EventHandler(this, {
 		directory: resolve(__dirname, 'events'),
+		logging: true,
+		
 	});
 
 	public async start(): Promise<this> {
